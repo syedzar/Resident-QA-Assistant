@@ -1,0 +1,26 @@
+# secrets
+.env
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# data (raw downloads stay local / in Databricks Volumes, never in git)
+data/raw/*
+!data/raw/.gitkeep
+*.parquet
+
+# local services
+qdrant_storage/
+mlruns/
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# third-party binaries
+tools/
