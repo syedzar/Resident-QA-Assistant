@@ -71,7 +71,7 @@ All tables live in Unity Catalog under `workspace.rcqa`, stored as Delta.
 | Raw | `scripts/upload_to_volume.sh` | Volume `/Volumes/workspace/rcqa/raw` | 9 clinical Synthea tables (gzipped 900 MB → 58 MB), PDFs, law text, label JSON |
 | Bronze | `01_bronze` | `bronze_<table>`, `bronze_documents`, `bronze_drug_labels`, `bronze_sources` | Raw as-is, every CSV column a string, plus `_source_file` and `_ingested_at` lineage |
 | Silver | `02_silver` | `silver_<table>`, `silver_document_pages`, `silver_drug_label_sections` | snake_case, blanks → NULL, typed dates/numbers, exact duplicates removed; PDFs per page, labels per section |
-| Gold | TODO (stage 4) | | Resident profiles, de-identification |
+| Gold | `03_gold` | `gold_residents`, `gold_conditions`, `gold_medications`, `gold_encounters`, `gold_allergies`, `gold_fall_risk`, `gold_resident_profiles` | Living residents only, de-identified (see Privacy); one profile row per resident with sorted arrays + rendered `profile_text` |
 
 **Data quality.** Every layer writes to `dq_results` (one row per check per run):
 row counts, null counts on required fields, duplicate keys, exact duplicate rows,
@@ -94,7 +94,42 @@ TODO (stage 8): 50-question eval set, metrics, baseline vs. best table.
 | best     | – | – | – | – | – | – |
 
 ## 7. Privacy
-TODO (stage 4): what is removed, how the privacy test enforces it.
+The data is synthetic, but the pipeline is built as if it weren't.
+
+**De-identification by construction (silver → gold).** Gold columns are an allow-list
+(`src/rcqa/gold.py`), so nothing reaches gold unless it is named there.
+
+| Identifier | In gold? |
+|---|---|
+| Names, maiden name | removed |
+| SSN, driver's licence, passport | removed |
+| Street address, city, county, ZIP, lat/lon, birthplace | removed |
+| Synthea patient / encounter / provider / payer UUIDs | removed; patient → short `resident_id` (101–1100) |
+| Exact birth date | removed → age in years, **capped at 90**, plus 5-year age band |
+| Deceased patients | excluded (gold = current residents) |
+| Clinical event dates | **kept** (staff need "when") — see limitation below |
+
+The UUID ↔ `resident_id` map lives only in the restricted `silver_resident_key_map`.
+Ids are assigned in salted-hash order, so the number reveals nothing about the person.
+
+**Privacy gate (blocks the job).** `03_gold` scans every row of every gold table
+(~298k rows, serialised to JSON) plus every rendered profile, using two independent nets:
+format patterns (SSN, UUID, licence, passport, phone, Synthea-style names) and known
+values from silver (every name, ID and address, plus each resident's *own* birth date).
+A **canary** scans 20 deliberately leaky rows each run and must find leaks, which proves
+the gate can still fail.
+
+| Check (latest run) | Result |
+|---|---|
+| Leaks in 7 gold tables + 1,000 profile texts | **0** |
+| Canary leaks detected (must be > 0) | 160 |
+
+`pytest` re-runs the scan from a laptop against live gold (`tests/test_privacy_live.py`,
+skipped in CI where there are no credentials) and unit-tests every identifier type.
+
+**Known limitation.** Real-world Safe Harbor de-identification would also generalise or
+shift event dates (e.g. a random per-resident offset). That was left out so staff answers
+keep real dates, which is acceptable only because the data is synthetic.
 
 ## 8. How to run it
 TODO (stages 1, 9, 10). Local services so far:

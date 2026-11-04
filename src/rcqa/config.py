@@ -3,6 +3,10 @@ CATALOG = "workspace"   # Free Edition default catalog
 SCHEMA = "rcqa"
 VOLUME = f"/Volumes/{CATALOG}/{SCHEMA}/raw"
 
+# Salt for the resident_id ordering. Fine in code for synthetic data; with real data
+# this would live in a Databricks secret scope so ids can't be recomputed from UUIDs.
+RESIDENT_ID_SALT = "rcqa-v1"
+
 SYNTHEA_TABLES = ["patients", "encounters", "conditions", "medications", "observations",
                   "procedures", "allergies", "careplans", "immunizations"]
 

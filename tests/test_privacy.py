@@ -1,0 +1,57 @@
+"""The privacy scanner must catch every identifier type, and must not cry wolf on normal clinical text."""
+from datetime import date
+
+import pytest
+
+from rcqa.privacy import KnownIdentifiers, find_leaks
+
+PATIENT = {"id": "e74367bd-7385-97dc-2c7f-251b4cd9fe29", "first": "Tennille443", "middle": "Denna536",
+           "last": "Kiehn525", "maiden": "Rosenbaum794", "ssn": "999-21-9587", "drivers": "S99929408",
+           "passport": "X22883891X", "address": "911 Hauck Key Suite 34", "birthdate": date(1960, 3, 1)}
+KNOWN = KnownIdentifiers.from_patient_rows([PATIENT], {PATIENT["id"]: 204})
+
+
+@pytest.mark.parametrize("leaked, kind", [
+    ("SSN 999-21-9587 on file", "ssn"),
+    ("record e74367bd-7385-97dc-2c7f-251b4cd9fe29", "uuid"),
+    ("licence S99929408", "drivers_licence"),
+    ("passport X22883891X", "passport"),
+    ("call 555-123-4567", "phone"),
+    ("seen by Tennille443", "synthea_name"),
+    ("lives at 911 Hauck Key Suite 34", "address"),
+    ("born 1960-03-01", "birthdate"),
+    ("born March 1, 1960", "birthdate"),
+    ("DOB 03/01/1960", "birthdate"),
+])
+def test_each_identifier_type_is_caught(leaked, kind):
+    kinds = {leak.kind for leak in find_leaks(leaked, KNOWN, resident_id=204)}
+    assert kind in kinds
+
+
+def test_name_caught_by_known_list_even_without_digits_pattern():
+    known = KnownIdentifiers(tokens={"Kiehn"})
+    assert {leak.kind for leak in find_leaks("Mrs Kiehn fell", known)} == {"known_identifier"}
+
+
+CLEAN_PROFILE = """# Resident 204
+Sex: F | Age: 66 (age band 65-69) | Profile as of 2026-11-04
+
+## Fall risk and falls
+Latest Morse Fall Scale assessment: High Risk (MFS Score 50+), total score 55, assessed 2026-03-01.
+
+## Active medications
+- Simvastatin 20 MG Oral Tablet (since 2015-06-22; for Hyperlipidemia)
+- Vitamin B12 5 MG/ML Injectable Solution (since 2020-01-01)
+- 24 HR metoprolol succinate 100 MG Extended Release Oral Tablet (since 2019-04-02)
+"""
+
+
+def test_clean_profile_has_no_false_positives():
+    assert find_leaks(CLEAN_PROFILE, KNOWN, resident_id=204) == []
+
+
+def test_other_residents_birthdate_is_not_flagged():
+    # 2026-03-01 is an encounter date here; it must only count as a leak for the resident born on it.
+    known = KnownIdentifiers(birthdates={204: date(1960, 3, 1), 305: date(2026, 3, 1)})
+    assert find_leaks(CLEAN_PROFILE, known, resident_id=204) == []
+    assert find_leaks(CLEAN_PROFILE, known, resident_id=305)  # same text, but it IS 305's birth date
