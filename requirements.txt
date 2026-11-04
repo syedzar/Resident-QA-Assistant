@@ -1,5 +1,11 @@
 # Local dependencies. Added stage by stage, only when first used.
+# Python 3.12 (matches Databricks serverless).
 # Stage 1
 qdrant-client>=1.12
 python-dotenv>=1.0
 pytest>=8.0
+# Stage 3: local Spark for unit tests (needs Java 17+)
+pyspark==4.0.1
+pandas>=2.2
+pyarrow>=17
+pypdf>=5.0

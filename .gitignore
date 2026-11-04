@@ -24,3 +24,6 @@ Thumbs.db
 
 # third-party binaries
 tools/
+
+# databricks CLI sync state
+.databricks/

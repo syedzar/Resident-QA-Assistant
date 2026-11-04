@@ -64,8 +64,23 @@ powershell -ExecutionPolicy Bypass -File scripts/convert_elaws_docs.ps1   # e-La
 ```
 
 ## 4. Pipeline (Databricks)
-TODO (stages 3–5, 9): bronze/silver/gold tables, DQ checks, de-identification,
-chunking, job schedule.
+All tables live in Unity Catalog under `workspace.rcqa`, stored as Delta.
+
+| Layer | Notebook | Tables | What happens |
+|---|---|---|---|
+| Raw | `scripts/upload_to_volume.sh` | Volume `/Volumes/workspace/rcqa/raw` | 9 clinical Synthea tables (gzipped 900 MB → 58 MB), PDFs, law text, label JSON |
+| Bronze | `01_bronze` | `bronze_<table>`, `bronze_documents`, `bronze_drug_labels`, `bronze_sources` | Raw as-is, every CSV column a string, plus `_source_file` and `_ingested_at` lineage |
+| Silver | `02_silver` | `silver_<table>`, `silver_document_pages`, `silver_drug_label_sections` | snake_case, blanks → NULL, typed dates/numbers, exact duplicates removed; PDFs per page, labels per section |
+| Gold | TODO (stage 4) | | Resident profiles, de-identification |
+
+**Data quality.** Every layer writes to `dq_results` (one row per check per run):
+row counts, null counts on required fields, duplicate keys, exact duplicate rows,
+and **orphan foreign keys** (e.g. a medication pointing at a patient or encounter
+that doesn't exist). `error` checks stop the job; `warn` checks are recorded only.
+The measuring (`profile`, Spark) and judging (`evaluate`, plain Python) halves are
+split so the rules are unit-tested without a cluster.
+
+TODO (stages 5, 9): chunking, job schedule.
 
 ## 5. Retrieval + generation (Qdrant RAG)
 TODO (stages 6–7): embedding model, collection schema, filters, prompt.
