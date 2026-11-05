@@ -156,3 +156,9 @@ def test_boilerplate_overlap_does_not_hide_a_wrong_citation():
 
 def test_uncited_count_keeps_trailing_citation_with_its_sentence():
     assert rag.uncited_sentences("Takes metformin since 2026-10-18. [6]\nAlso takes B12 daily. [6]") == 0
+
+
+def test_parse_citations_tolerates_spaces():
+    # qwen2.5:3b wrote "[ S1 ]" in the baseline eval; v1 parsing missed it and refused a correct answer
+    assert rag.parse_citations("No, it is not listed [ S1 ].") == [1]
+    assert rag.parse_citations("See [S 2, S3].") == [2, 3]

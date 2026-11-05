@@ -10,3 +10,7 @@ pandas>=2.2
 pyarrow>=17
 pypdf>=5.0
 fastembed==0.9.1        # BGE-small via ONNX; same version in 05_embeddings
+# Stage 8: evaluation tracked in Databricks-hosted MLflow
+mlflow-skinny==3.18.0
+# Stage 10: app
+streamlit==1.66.1

@@ -41,7 +41,7 @@ def write(df, name):
 results = []
 for t in config.SYNTHEA_TABLES:
     raw = (spark.read
-           .option("header", True).option("inferSchema", False)   # all strings in bronze
+           .option("header", "true").option("inferSchema", "false")   # all strings in bronze
            .option("quote", '"').option("escape", '"')
            .option("mode", "PERMISSIVE")
            .csv(f"{config.VOLUME}/synthea/{t}.csv.gz"))
@@ -60,10 +60,11 @@ docs = write(lineage(spark.read.format("binaryFile")
                      .option("pathGlobFilter", "*.{pdf,txt}")
                      .load(f"{config.VOLUME}/docs")), "bronze_documents")
 
-labels = write(lineage(spark.read.option("wholetext", True)
-                       .text(f"{config.VOLUME}/drug_labels/*.json")), "bronze_drug_labels")
+# wholetext as a keyword argument: on serverless, .option("wholetext", "true") was silently ignored
+# (each JSON line became a row); the files-vs-rows DQ check below now catches that.
+labels = write(lineage(spark.read.text(f"{config.VOLUME}/drug_labels/*.json", wholetext=True)), "bronze_drug_labels")
 
-sources = write(lineage(spark.read.option("header", True).option("multiLine", True)
+sources = write(lineage(spark.read.option("header", "true").option("multiLine", "true")
                         .option("quote", '"').option("escape", '"')
                         .csv(f"{config.VOLUME}/sources/sources.csv")), "bronze_sources")
 
@@ -71,6 +72,11 @@ for name, df in [("bronze_documents", docs), ("bronze_drug_labels", labels), ("b
     rules = dq.TableRules(name, min_rows=1)
     results += dq.evaluate("bronze", rules, dq.profile(df, rules))
     print(f"{name:<22} {df.count():>4} rows")
+
+# One JSON label file must be exactly one row; anything else means the file was split into lines.
+n_rows, n_files = labels.count(), labels.select("_source_file").distinct().count()
+results.append(dq.CheckResult("bronze", "bronze_drug_labels", "rows_per_file", "_source_file",
+                              n_rows - n_files, 0, n_rows == n_files, "error"))
 
 # COMMAND ----------
 

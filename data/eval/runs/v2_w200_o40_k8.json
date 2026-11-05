@@ -1,0 +1,983 @@
+{
+ "run_name": "v2_w200_o40_k8",
+ "params": {
+  "config_id": "w200_o40",
+  "chunk_size": 200,
+  "overlap": 40,
+  "k": 8,
+  "filter": true,
+  "embed_model": "BAAI/bge-small-en-v1.5",
+  "llm": "ollama/qwen2.5:3b",
+  "min_score": 0.65,
+  "citation_check": true,
+  "prompt_version": "v2",
+  "n_questions": 60,
+  "eval_set_sha256": "0edca0191b22",
+  "mode": "answers"
+ },
+ "metrics": {
+  "hit_at_1": 0.94,
+  "hit_at_3": 1.0,
+  "hit_at_5": 1.0,
+  "hit_at_10": 1.0,
+  "mrr": 0.9666666666666667,
+  "hit_at_8_resident": 1.0,
+  "hit_at_8_document": 1.0,
+  "retrieval_seconds": 2.080677032470703,
+  "answer_rate": 0.92,
+  "grounded_rate": 0.92,
+  "unsupported_answer_pct": 0.0,
+  "keyword_accuracy": 0.84,
+  "uncited_sentences_per_answer": 0.2391304347826087,
+  "citations_corrected": 4.0,
+  "refusal_rate_negatives": 1.0,
+  "grounded_rate_resident": 1.0,
+  "grounded_rate_document": 0.84,
+  "mean_answer_seconds": 2.5321242769559222
+ },
+ "per_question": [
+  {
+   "id": "res_fall_877",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8813,
+   "answer": "This resident's most recent Morse Fall Scale risk level was Low Risk [1].",
+   "cited": [
+    "Resident 877 > Fall risk and falls (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_fall_608",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8679,
+   "answer": "This resident's most recent Morse Fall Scale risk level was Moderate Risk [1].",
+   "cited": [
+    "Resident 608 > Fall risk and falls (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_fall_996",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8748,
+   "answer": "This resident's most recent Morse Fall Scale risk level was Moderate Risk [1].",
+   "cited": [
+    "Resident 996 > Fall risk and falls (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_fall_1023",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8865,
+   "answer": "This resident's most recent Morse Fall Scale risk level was High Risk [1].",
+   "cited": [
+    "Resident 1023 > Fall risk and falls (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_fall_134",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8725,
+   "answer": "This resident's most recent Morse Fall Scale risk level was High Risk [1].",
+   "cited": [
+    "Resident 134 > Fall risk and falls (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_meds_584",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7449,
+   "answer": "Yes, simvastatin is on the active medications list [1].",
+   "cited": [
+    "Resident 584 > Active medications (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_meds_186",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7455,
+   "answer": "Yes, lisinopril 10 MG Oral Tablet is on the active medications list [1].",
+   "cited": [
+    "Resident 186 > Active medications (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_meds_851",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7419,
+   "answer": "Yes, Resident 851 is currently taking albuterol [1].",
+   "cited": [
+    "Resident 851 > Active medications (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_meds_455",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7136,
+   "answer": "Yes, Resident 455 is currently taking insulin [1].",
+   "cited": [
+    "Resident 455 > Active medications (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_meds_624",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7495,
+   "answer": "Yes, alendronic acid is on the active medications list [1].",
+   "cited": [
+    "Resident 624 > Active medications (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_conditions_285",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8116,
+   "answer": "Yes, chronic kidney disease stage 4 is an active diagnosis for this resident [1].",
+   "cited": [
+    "Resident 285 > Active conditions (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_conditions_910",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7962,
+   "answer": "Yes, ischemic heart disease is an active diagnosis for this resident [1].",
+   "cited": [
+    "Resident 910 > Active conditions (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_conditions_519",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7571,
+   "answer": "Yes, Atrial fibrillation is an active diagnosis for this resident [1].",
+   "cited": [
+    "Resident 519 > Active conditions (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_conditions_716",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7831,
+   "answer": "Yes, hyperlipidemia is an active diagnosis [2].",
+   "cited": [
+    "Resident 716 > Active conditions (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_allergies_723",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7352,
+   "answer": "This resident is allergic to animal dander [1].",
+   "cited": [
+    "Resident 723 > Allergies (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_allergies_715",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7329,
+   "answer": "This resident is allergic to eggs [1].",
+   "cited": [
+    "Resident 715 > Allergies (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_allergies_470",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.6896,
+   "answer": "Penicillin V; reaction: Wheal (finding) (mild) - Allergic disposition [1].",
+   "cited": [
+    "Resident 470 > Allergies (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_allergies_154",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7229,
+   "answer": "This resident is allergic to peanut [1].",
+   "cited": [
+    "Resident 154 > Allergies (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_injuries_783",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7163,
+   "answer": "Injuries recorded for this resident are a concussion with loss of consciousness in 2022-03-24 and a sprain of the ankle in 2018-03-28. [1]",
+   "cited": [
+    "Resident 783 > Injuries (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_injuries_861",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7633,
+   "answer": "Injuries recorded for this resident include a sprain of the ankle, concussion of the brain, and injury of the knee. [1]",
+   "cited": [
+    "Resident 861 > Injuries (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_injuries_150",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7074,
+   "answer": "Injuries recorded for this resident are Whiplash injury to neck (disorder) [1].",
+   "cited": [
+    "Resident 150 > Injuries (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_injuries_577",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": false,
+   "uncited_sentences": 1,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7503,
+   "answer": "Injuries recorded for this resident include a fracture subluxation of the wrist and a fracture of the bone, both resolved in 2025. Additionally, there was a whiplash injury to the neck, which was resolved in 2018. [1]",
+   "cited": [
+    "Resident 577 > Injuries (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_encounters_602",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7483,
+   "answer": "This resident's most recent encounter was on 2026-08-05, where they had an ambulatory encounter for an ophthalmic examination and evaluation. [1]",
+   "cited": [
+    "Resident 602 > Recent encounters (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_encounters_833",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7545,
+   "answer": "This resident's most recent encounter was on 2026-03-12, and it was for a follow-up encounter (procedure) due to Hyperlipidemia (disorder) [1].",
+   "cited": [
+    "Resident 833 > Recent encounters (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "res_encounters_437",
+   "kind": "resident",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.6619,
+   "answer": "This resident's most recent encounter was on 2026-10-31, and it was for an urgent care clinic (environment) [1].",
+   "cited": [
+    "Resident 437 > Recent encounters (as of 2026-11-04)"
+   ]
+  },
+  {
+   "id": "reg_post_fall",
+   "kind": "document",
+   "answered": false,
+   "reason": "no_citations",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7936,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "reg_skin_weekly",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8368,
+   "answer": "The regulation states that a resident exhibiting altered skin integrity, including skin breakdown, pressure injuries, skin tears or wounds, must be reassessed at least weekly by an authorized person described in subsection (2.1), if clinically indicated. [1] [2]",
+   "cited": [
+    "O. Reg. 246/22, s. 55 (Skin and wound care)",
+    "O. Reg. 246/22, s. 55 (Skin and wound care)"
+   ]
+  },
+  {
+   "id": "reg_pain",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7845,
+   "answer": "Every licensee of a long-term care home shall ensure that when a resident's pain is not relieved by initial interventions, the resident is assessed using a clinically appropriate assessment instrument specifically designed for this purpose [1].",
+   "cited": [
+    "O. Reg. 246/22, s. 57 (Pain management)"
+   ]
+  },
+  {
+   "id": "reg_bed_rails",
+   "kind": "document",
+   "answered": false,
+   "reason": "no_citations",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8353,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "reg_weight",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 1,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8595,
+   "answer": "Every licensee of a long-term care home shall ensure that residents with a change of 5 per cent of body weight, or more, over one month; a change of 7. 5 per cent of body weight, or more, over three months; a change of 10 per cent of body weight, or more, over six months; and any other weight change that compromises the resident's health status are assessed using an interdisciplinary approach, and that actions are taken and outcomes are evaluated. [1]",
+   "cited": [
+    "O. Reg. 246/22, s. 75 (Weight changes)"
+   ]
+  },
+  {
+   "id": "reg_ipac_lead",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 1,
+   "invalid_citations": 0,
+   "top_score": 0.7796,
+   "answer": "The infection prevention and control lead is designated by the licensee and must have education and experience in various aspects of infection prevention and control, including infectious diseases, cleaning and disinfection, data collection and trend analysis, reporting protocols, outbreak management, asepsis, microbiology, adult education, epidemiology, and program management. [3]",
+   "cited": [
+    "O. Reg. 246/22, s. 102 (Infection prevention and control program)"
+   ]
+  },
+  {
+   "id": "reg_continence",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8734,
+   "answer": "The continence care and bowel management program must provide treatments and interventions to promote continence, treatments and interventions to prevent constipation including nutrition and hydration protocols, toileting programs including protocols for bowel management, strategies to maximize residents' independence, comfort, and dignity, including equipment, supplies, devices, and assistive aids, and an annual evaluation of residents' satisfaction with the range of continence care products, with the evaluation being taken into account by the licensee when making purchasing decisions. [1] [2] [3]",
+   "cited": [
+    "O. Reg. 246/22, s. 56 (Continence care and bowel management)",
+    "O. Reg. 246/22, s. 56 (Continence care and bowel management)",
+    "O. Reg. 246/22, s. 56 (Continence care and bowel management)"
+   ]
+  },
+  {
+   "id": "act_privacy",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 1,
+   "invalid_citations": 0,
+   "top_score": 0.7814,
+   "answer": "Every resident has the right to be afforded privacy in treatment and in caring for their personal needs. [1]",
+   "cited": [
+    "Fixing Long-Term Care Act, 2021, s. 3 (Residents' Bill of Rights)"
+   ]
+  },
+  {
+   "id": "act_whistle",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 2,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.736,
+   "answer": "Yes, staff are protected from retaliation for reporting concerns to an inspector [2]. They are not allowed to dismiss, discipline, suspend, or impose penalties on staff members for reporting issues. Staff are also not allowed to intimidate, coerce, or harass any person for reporting concerns.",
+   "cited": [
+    "Fixing Long-Term Care Act, 2021, s. 30 (Whistle-blowing protection)"
+   ]
+  },
+  {
+   "id": "act_report_director",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7358,
+   "answer": "A person who has reasonable grounds to suspect that any of the following has occurred or may occur shall immediately report the suspicion and the information upon which it is based to the Director: improper or incompetent treatment or care of a resident that resulted in harm or a risk of harm to the resident; abuse of a resident by anyone or neglect of a resident by the licensee or staff that resulted in harm or a risk of harm to the resident; unlawful conduct that resulted in harm or a risk of harm to a resident; misuse or misappropriation of a resident's money; misuse or misappropriation of funding provided to a licensee under this Act, or the Connecting Care Act, 2019 [1].",
+   "cited": [
+    "Fixing Long-Term Care Act, 2021, s. 28 (Reporting certain matters to Director)"
+   ]
+  },
+  {
+   "id": "act_restraint",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 1,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8614,
+   "answer": "A resident may be restrained by a physical device as described in paragraph 3 of subsection 34 (1) of the Fixing Long-Term Care Act, 2021, if the restraining of the resident is included in the resident's plan of care. This inclusion is contingent upon all of the following conditions being satisfied: there is a significant risk that the resident or another person would suffer serious bodily harm if the resident were not restrained; alternatives to restraining the resident have been considered and found ineffective; the method of restraining is reasonable, considering the resident's physical and mental condition and personal history; and a physician, registered nurse in the extended class, or other person provided for in the regulations has ordered or approved the restraining. [1] [3]",
+   "cited": [
+    "Fixing Long-Term Care Act, 2021, s. 35 (Restraining by physical devices)",
+    "Fixing Long-Term Care Act, 2021, s. 35 (Restraining by physical devices)"
+   ]
+  },
+  {
+   "id": "rnao_hip_protectors",
+   "kind": "document",
+   "answered": false,
+   "reason": "no_citations",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8167,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "rnao_exercise",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8796,
+   "answer": "The guideline recommends a range of exercise interventions to prevent falls, including core strength, stepping, interactive cognitive\u2013motor, and perturbation-based balance training, Pilates, exergaming, falls prevention exercise programs, foot and ankle exercises, individualized exercise, tai chi, and yoga. [1]",
+   "cited": [
+    "Preventing Falls and Reducing Injury from Falls (4th ed.), PDF p. 38 (Recommendations)"
+   ]
+  },
+  {
+   "id": "rnao_med_review",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 2,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8491,
+   "answer": "Yes, medications should be reviewed to reduce fall risk [1]. The expert panel recommends that medication reviews be conducted at various times, including transitions in care, following a fall, following a significant change in condition, and when new medications are prescribed. This ongoing review helps in identifying medications that may increase the risk for falls and managing side effects of medications known to contribute to fall risk.",
+   "cited": [
+    "Preventing Falls and Reducing Injury from Falls (4th ed.), PDF p. 41 (Recommendations)"
+   ]
+  },
+  {
+   "id": "rnao_vitamin_d",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8356,
+   "answer": "The guideline states that adults at risk for falls or fall injuries, and those at risk for fractures, in particular, should be referred to the appropriate health-care provider for advice about vitamin D supplementation [2].",
+   "cited": [
+    "Preventing Falls and Reducing Injury from Falls (4th ed.), PDF p. 41 (Recommendations)"
+   ]
+  },
+  {
+   "id": "rnao_cam",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8357,
+   "answer": "The Confusion Assessment Method (CAM) tool can be used to screen older adults for delirium. [1]",
+   "cited": [
+    "Delirium, Dementia, and Depression in Older Adults: Assessment and Care (2nd ed.), PDF p. 51"
+   ]
+  },
+  {
+   "id": "rnao_gds",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 1,
+   "invalid_citations": 0,
+   "top_score": 0.8372,
+   "answer": "The Patient Health Questionnaire-9 item interview (PHQ-9-OV) is used to screen for depression in older adults in long-term care settings. [1]",
+   "cited": [
+    "Delirium, Dementia, and Depression in Older Adults: Assessment and Care (2nd ed.), PDF p. 144 (Appendices)"
+   ]
+  },
+  {
+   "id": "rnao_reposition",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 1,
+   "invalid_citations": 0,
+   "top_score": 0.8708,
+   "answer": "People at risk of pressure injuries should be repositioned every two to four hours. [1] This recommendation is based on evidence from randomized controlled trials (RCTs) and non-randomized studies, which suggest that repositioning every two to four hours may reduce the incidence of pressure injuries and precursor signs and symptoms. [1] [2] [3] [4] [5] [6] [7] [8] However, the certainty of the evidence is low, and individual factors such as the person's mobility, overall health condition, type of support surface, location of pressure injuries, pain, comfort, and preferences of the person and essential caregivers should also be considered. [3] [2] [3] [4] [5] [6] [7] [8]",
+   "cited": [
+    "Pressure Injury Management: Risk Assessment, Prevention and Treatment (4th ed.), PDF p. 49 (Recommendations)",
+    "Pressure Injury Management: Risk Assessment, Prevention and Treatment (4th ed.), PDF p. 53 (Recommendations)",
+    "Pressure Injury Management: Risk Assessment, Prevention and Treatment (4th ed.), PDF p. 51 (Recommendations)",
+    "Pressure Injury Management: Risk Assessment, Prevention and Treatment (4th ed.), PDF p. 51 (Recommendations)",
+    "Pressure Injury Management: Risk Assessment, Prevention and Treatment (4th ed.), PDF p. 50 (Recommendations)",
+    "Pressure Injury Management: Risk Assessment, Prevention and Treatment (4th ed.), PDF p. 50 (Recommendations)",
+    "Pressure Injury Management: Risk Assessment, Prevention and Treatment (4th ed.), PDF p. 49 (Recommendations)",
+    "Pressure Injury Management: Risk Assessment, Prevention and Treatment (4th ed.), PDF p. 49 (Recommendations)"
+   ]
+  },
+  {
+   "id": "rnao_braden",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8635,
+   "answer": "The risk assessment tools mentioned in the sources are the Braden scale, Norton scale, interRAI Pressure Ulcer Risk Scale (PURS), Waterlow scale, Pressure Ulcer Scale for Healing (PUSH), Photographic Wound Assessment Tool (PWAT), and Bates-Jensen Wound Assessment Tool (BWAT). [2]",
+   "cited": [
+    "Pressure Injury Management: Risk Assessment, Prevention and Treatment (4th ed.), PDF p. 102 (Appendices)"
+   ]
+  },
+  {
+   "id": "ipac_moments",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 1,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8556,
+   "answer": "The moments for hand hygiene in long-term care are classified into four situations where hand hygiene is required. These situations include: Before touching a resident or any objects or furniture in the resident\u2019s environment (Moment 1), Before an aseptic procedure performed on a resident (Moment 2), After any potential exposure to a resident\u2019s blood or body fluids (Moment 3), and Before joining an individual or group activity in a common area, prior to directly assisting a resident, after directly assisting a resident, and before leaving an individual or group activity in a common area (Moment 4). [4]",
+   "cited": [
+    "Infection Prevention and Control for Long-Term Care Homes: Summary of Key Principles and Best Practices, PDF p. 47"
+   ]
+  },
+  {
+   "id": "ipac_ppe_order",
+   "kind": "document",
+   "answered": false,
+   "reason": "no_citations",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.7229,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "label_warfarin_bleed",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8051,
+   "answer": "Signs and symptoms of bleeding include: pain, swelling or discomfort, prolonged bleeding from cuts, increased menstrual flow or vaginal bleeding, nosebleeds, bleeding of gums from brushing, unusual bleeding or bruising, red or dark brown urine, red or tar black stools, headache, dizziness, or weakness [see Box Warning and Warnings and Precautions (5.1) ]. [2]",
+   "cited": [
+    "Drug label: warfarin > Warnings and Cautions"
+   ]
+  },
+  {
+   "id": "label_metformin_lactic",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 2,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8055,
+   "answer": "The boxed warning for metformin states: \"WARNING: LACTIC ACIDOSIS Postmarketing cases of metformin-associated lactic acidosis have resulted in death, hypothermia, hypotension, and resistant bradyarrhythmias. The onset of metformin-associated lactic acidosis is often subtle, accompanied only by nonspecific symptoms such as malaise, myalgias, respiratory distress, somnolence, and abdominal pain. Metformin-associated lactic acidosis was characterized by elevated blood lactate levels (>5 mmol/L), anion gap acidosis (without evidence of ketonuria or ketonemia), and an increased lactate/pyruvate ratio; and metformin plasma levels generally >5 mcg/mL [see Warnings and Precautions (5.1) ].\" [4]",
+   "cited": [
+    "Drug label: metformin er 500 mg > Boxed Warning"
+   ]
+  },
+  {
+   "id": "label_simvastatin_myopathy",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 1,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8208,
+   "answer": "Simvastatin can cause muscle side effects such as muscle cramps, immune-mediated necrotizing myopathy, and polymyalgia rheumatica. These side effects can range from mild to severe, including muscle weakness, pain, or tenderness, and in some cases, can lead to more serious conditions like myopathy and rhabdomyolysis. [1]",
+   "cited": [
+    "Drug label: simvastatin > Adverse Reactions"
+   ]
+  },
+  {
+   "id": "label_lisinopril_angioedema",
+   "kind": "document",
+   "answered": true,
+   "reason": "answered",
+   "grounded": true,
+   "keyword_ok": true,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.8112,
+   "answer": "Lisinopril can cause angioedema, which includes swelling of the face, extremities, lips, tongue, glottis, and/or larynx. [4]",
+   "cited": [
+    "Drug label: lisinopril > Warnings and Cautions"
+   ]
+  },
+  {
+   "id": "neg_public_0",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.4653,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "neg_public_1",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.5094,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "neg_public_2",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.557,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "neg_public_3",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.4577,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "neg_public_4",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.481,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "neg_resident_0",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.6469,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "neg_resident_1",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.5643,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "neg_resident_2",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.6077,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "neg_resident_3",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.6193,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  },
+  {
+   "id": "neg_resident_4",
+   "kind": "negative",
+   "answered": false,
+   "reason": "low_retrieval_score",
+   "grounded": false,
+   "keyword_ok": false,
+   "uncited_sentences": 0,
+   "recited": 0,
+   "invalid_citations": 0,
+   "top_score": 0.5909,
+   "answer": "I don't know. The available sources don't cover this.",
+   "cited": []
+  }
+ ]
+}

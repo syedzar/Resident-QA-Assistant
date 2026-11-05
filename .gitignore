@@ -28,3 +28,4 @@ tools/
 
 # databricks CLI sync state
 .databricks/
+.claude/

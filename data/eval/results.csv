@@ -1,0 +1,16 @@
+run_name,mlflow_run_id,config_id,chunk_size,overlap,k,filter,embed_model,llm,min_score,citation_check,n_questions,eval_set_sha256,mode,hit_at_1,hit_at_10,hit_at_3,hit_at_5,hit_at_5_document,hit_at_5_resident,mrr,retrieval_seconds
+baseline_w200_o40_k5_retrieval,4e066e0fd28d49b9a67326b97c7bae4c,w200_o40,200,40,5,True,BAAI/bge-small-en-v1.5,-,0.65,True,60,0edca0191b22,retrieval,0.94,1.0,1.0,1.0,1.0,1.0,0.9667,3.0715
+w100_o20_k5_retrieval,530af51e48844952bb81a0999c4fe57e,w100_o20,100,20,5,True,BAAI/bge-small-en-v1.5,-,0.65,True,60,0edca0191b22,retrieval,0.86,1.0,0.94,0.96,0.92,1.0,0.906,2.4233
+w100_o20_k5_nofilter_retrieval,c22ea0c19ad24f1fa7226b16b340feb6,w100_o20,100,20,5,False,BAAI/bge-small-en-v1.5,-,0.65,True,60,0edca0191b22,retrieval,0.82,1.0,0.92,0.96,0.92,1.0,0.8807,2.2818
+w200_o40_k5_retrieval,31916e56de70433eb41caecc4e1df974,w200_o40,200,40,5,True,BAAI/bge-small-en-v1.5,-,0.65,True,60,0edca0191b22,retrieval,0.94,1.0,1.0,1.0,1.0,1.0,0.9667,2.8031
+w200_o40_k5_nofilter_retrieval,212d7efc64ea42e78d968a5512579dcc,w200_o40,200,40,5,False,BAAI/bge-small-en-v1.5,-,0.65,True,60,0edca0191b22,retrieval,0.9,1.0,1.0,1.0,1.0,1.0,0.9467,2.3397
+baseline_w200_o40_k5,8e9811dfe9fc4a01a5e9639c30871840,w200_o40,200,40,5,True,BAAI/bge-small-en-v1.5,ollama/qwen2.5:3b,0.65,True,60,0edca0191b22,answers,0.86,5.0,0.86,0.92,0.8,0.94,1.0,1.0,1.0,1.0,1.0,0.8,2.8733,0.9667,1.0,2.1865,0.5814,0.0
+v2_w200_o40_k5,08e4886d51ef4a8db7096afff1f86e31,w200_o40,200,40,5,True,BAAI/bge-small-en-v1.5,ollama/qwen2.5:3b,0.65,True,v2,60,0edca0191b22,answers,0.94,4.0,0.94,0.88,1.0,0.94,1.0,1.0,1.0,1.0,1.0,0.86,2.6914,0.9667,1.0,2.3738,0.2979,0.0
+v2_w200_o40_k3,440b59886e9a43f68bfd39535d15c2dd,w200_o40,200,40,3,True,BAAI/bge-small-en-v1.5,ollama/qwen2.5:3b,0.65,True,v2,60,0edca0191b22,answers,0.98,2.0,0.96,0.92,1.0,0.94,1.0,1.0,1.0,1.0,1.0,0.88,2.4049,0.9667,1.0,2.7253,0.4082,2.0408
+v2_w200_o40_k8,c7c53fe600ba4fe5ad64628232468f3a,w200_o40,200,40,8,True,BAAI/bge-small-en-v1.5,ollama/qwen2.5:3b,0.65,True,v2,60,0edca0191b22,answers,0.92,4.0,0.92,0.84,1.0,0.94,1.0,1.0,1.0,1.0,1.0,0.84,2.5321,0.9667,1.0,2.0807,0.2391,0.0
+v2_w200_o40_k5_nocheck,5492643e63514ed6b3611312cd6b81da,w200_o40,200,40,5,True,BAAI/bge-small-en-v1.5,ollama/qwen2.5:3b,0.65,False,v2,60,0edca0191b22,answers,0.96,0.0,0.92,0.84,1.0,0.94,1.0,1.0,1.0,1.0,1.0,0.88,2.4047,0.9667,1.0,2.0007,0.3333,4.1667
+v2_w200_o40_k5_repeat,67a60c3b7c0640bbb0694a80a369c4a3,w200_o40,200,40,5,True,BAAI/bge-small-en-v1.5,ollama/qwen2.5:3b,0.65,True,v2,60,0edca0191b22,answers,0.96,5.0,0.96,0.92,1.0,0.94,1.0,1.0,1.0,1.0,1.0,0.88,2.3941,0.9667,1.0,2.5299,0.2917,0.0
+w300_o60_k5_retrieval,1d0321df51f74fba99edefd2a064c0d0,w300_o60,300,60,5,True,BAAI/bge-small-en-v1.5,-,0.65,True,-,60,0edca0191b22,retrieval,0.88,1.0,1.0,1.0,1.0,1.0,0.9367,2.8307
+w300_o60_k5_nofilter_retrieval,3bd1213c72b14af59f653604e0783641,w300_o60,300,60,5,False,BAAI/bge-small-en-v1.5,-,0.65,True,-,60,0edca0191b22,retrieval,0.84,0.98,0.98,0.98,0.96,1.0,0.9067,1.0477
+w400_o80_k5_retrieval,65edfa06fd854b7ab29df014ed1d94aa,w400_o80,400,80,5,True,BAAI/bge-small-en-v1.5,-,0.65,True,-,60,0edca0191b22,retrieval,0.88,1.0,0.98,1.0,1.0,1.0,0.934,1.0992
+w400_o80_k5_nofilter_retrieval,5a68f84eafd3463e97fa5bdc06ac8e89,w400_o80,400,80,5,False,BAAI/bge-small-en-v1.5,-,0.65,True,-,60,0edca0191b22,retrieval,0.82,1.0,0.96,1.0,1.0,1.0,0.8957,0.7022

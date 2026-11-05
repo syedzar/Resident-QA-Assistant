@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"        # same as Databricks serverless
+          cache: pip
+      - uses: actions/setup-java@v4     # local Spark for the PySpark unit tests
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: pip install -r requirements.txt
+      # Live tests (Databricks gold/chunk privacy scans, Qdrant search) skip themselves here:
+      # CI has no Databricks login and no Qdrant. They run on a laptop and inside the job.
+      - run: pytest -q -rs
+
+  deploy:
+    # On main only, and only if the repo has Databricks secrets: pull main into the Databricks
+    # Git folder, then update the job definition from databricks/jobs/rcqa_pipeline.json.
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DATABRICKS_GIT_FOLDER_ID: ${{ secrets.DATABRICKS_GIT_FOLDER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check secrets
+        id: secrets
+        run: |
+          if [ -n "$DATABRICKS_TOKEN" ] && [ -n "$DATABRICKS_HOST" ] && [ -n "$DATABRICKS_GIT_FOLDER_ID" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Databricks secrets not set: skipping deploy (tests still gate every push)."
+          fi
+      - uses: databricks/setup-cli@main
+        if: steps.secrets.outputs.ok == 'true'
+      - name: Pull main into the Databricks Git folder
+        if: steps.secrets.outputs.ok == 'true'
+        run: databricks repos update "$DATABRICKS_GIT_FOLDER_ID" --branch main
+      - name: Create or update the job
+        if: steps.secrets.outputs.ok == 'true'
+        run: bash scripts/deploy_job.sh

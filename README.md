@@ -5,8 +5,6 @@
 > **Qdrant** RAG pipeline with filtered vector search.
 > **Synthetic data only. No real patient data is used anywhere in this project.**
 
-<!-- Sections marked TODO get filled in as each stage is built. No number goes
-     in this README unless it was measured and logged in MLflow. -->
 
 ## 1. What it does
 Staff ask plain-English questions and get answers with citations to the exact
@@ -20,24 +18,40 @@ Example questions:
 - "What are the main side effects listed on the label for warfarin?"
 
 ## 2. Architecture
-TODO (stage 11): diagram.
+```mermaid
+flowchart LR
+  subgraph Sources
+    SY[Synthea CSV<br/>1,000 residents]
+    DOCS[RNAO + PHO PDFs<br/>FLTCA + O. Reg. 246/22]
+    LAB[openFDA labels x25]
+  end
+  subgraph DBX["Databricks Free Edition (job rcqa-pipeline, weekly)"]
+    VOL[(UC Volume<br/>raw files)] --> B[01 bronze<br/>strings + lineage]
+    B --> S[02 silver<br/>typed, deduped,<br/>pages & sections]
+    S --> G[03 gold<br/>de-identified profiles<br/>+ privacy gate]
+    G --> C[04 chunks<br/>citations + metadata<br/>+ privacy gate]
+    C --> E[05 embeddings<br/>BGE-small → Delta]
+    DQ[(dq_results)]
+    B & S & G & C & E -.-> DQ
+  end
+  SY & DOCS & LAB --> VOL
+  E -->|Parquet export| L[load_qdrant.py]
+  L --> Q[(Qdrant<br/>payload indexes:<br/>resident_id, document_type)]
+  U[Staff question] --> APP[Streamlit app]
+  APP -->|filtered search| Q
+  APP -->|numbered sources| LLM[Ollama qwen2.5:3b<br/>local GPU]
+  LLM -->|answer + checked citations| APP
+  EV[evaluate.py<br/>60 questions] -->|params, metrics, per-question| MLF[(MLflow<br/>Databricks)]
+  EV --> Q
+```
 
-```
-Synthea CSVs + public docs
-        │  (uploaded to a Unity Catalog Volume)
-        ▼
-Databricks: bronze ──► silver ──► gold (Delta tables, DQ checks, de-identification)
-        │                              │
-        │                        chunks + metadata (Delta)
-        ▼                              ▼
-  Databricks Job (scheduled)     embeddings ──► Qdrant (payload indexes:
-                                                resident_id, document_type)
-                                               │
-                    question ──► filtered search ──► LLM with citation prompt
-                                               │
-                                     Streamlit app (answer + sources)
-        MLflow: every retrieval experiment logged
-```
+Why this shape:
+- **Delta is the source of truth.** Qdrant is a disposable index that can be rebuilt from
+  `gold_chunk_embeddings` at any time.
+- **Privacy is enforced twice before anything is embedded** (gold and chunks), and filtered
+  search keeps one resident's question inside that resident's record.
+- **Everything is free and local where it matters.** The LLM runs on the laptop, so resident
+  text never leaves the machine.
 
 ## 3. Data sources
 Every cited source is recorded in [`data/sources/sources.csv`](data/sources/sources.csv)
@@ -97,7 +111,7 @@ Each chunk carries `source_id`, `document_type`, `section`, `page`, `resident_id
 staff, and an `embed_text` with a context header (e.g. `O. Reg. 246/22, s. 54: Falls
 prevention and management`) so a window from the middle of a section still says what
 it is about. `chunk_size` / `overlap` are job parameters; each configuration is its own
-`config_id` slice (`w200_o40`), written with Delta `replaceWhere`, so stage 8 can compare
+`config_id` slice (`w200_o40`), written with Delta `replaceWhere`, so the evaluation can compare
 configurations without overwriting each other.
 
 | Baseline `w200_o40` (latest run) | Chunks | Sources | Avg words |
@@ -115,13 +129,27 @@ Chunk DQ (all `error`): unique `chunk_id`, required fields not null, no chunk ov
 only if the chunk is a profile, every document chunk has a URL to cite.
 
 Bugs this caught on the first Databricks run: the Act produced **0** chunks because
-Windows `
-
-` line endings became blank lines and broke heading detection (fixed in
+Windows `CRLF` line endings became blank lines and broke heading detection (fixed in
 `clean_text`, regression test added), and 17 pages that were just a page number and a
 tab label were turned into useless chunks (now dropped).
 
-TODO (stage 9): job schedule.
+**Scheduled job.** [`databricks/jobs/rcqa_pipeline.json`](databricks/jobs/rcqa_pipeline.json)
+defines `rcqa-pipeline`: bronze → silver → gold → chunks → embeddings, every Sunday at 03:00
+(America/Toronto). It runs from the Databricks Git folder, with one shared `run_id` per run in
+`dq_results` and email on failure. `scripts/deploy_job.sh` creates or updates it idempotently
+(`jobs create` / `jobs reset`). Any `error` DQ check, privacy leak or broken canary fails the run.
+
+**CI/CD ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).** Every push and PR runs the
+pytest suite on Python 3.12 + Java 17 (local PySpark). Live tests (Databricks scans, Qdrant search)
+skip themselves without credentials. On `main`, if the repo has `DATABRICKS_HOST`,
+`DATABRICKS_TOKEN` and `DATABRICKS_GIT_FOLDER_ID` secrets, a deploy job pulls `main` into the
+Databricks Git folder and updates the job definition from the repo.
+
+**A bug the first scheduled run caught.** `spark.read.option("wholetext", True)` was silently
+ignored on serverless, so each drug-label JSON file became ~140 rows of single lines, and silver
+failed parsing them. Fixed by passing `wholetext=True` as an argument and every reader option as
+a string. A new bronze check, `rows_per_file` (one label file = one row), now fails the job on
+its own if this happens again.
 
 ## 5. Retrieval + generation (Qdrant RAG)
 **Embeddings.** `BAAI/bge-small-en-v1.5` (free, 384-d) through fastembed (ONNX, no PyTorch),
@@ -141,11 +169,11 @@ the model cached in the Volume, the UDF tasks died with an opaque `INTERNAL_ERRO
 | Where | Throughput (BGE-small, CPU) | 10,155 chunks |
 |---|---|---|
 | Databricks Free Edition serverless driver | ~3.5 chunks/s | 2,905 s (48 min) |
-| Laptop (same model, fastembed) | ~163 chunks/s | ~1 min |
+| Laptop CPU (same model, fastembed) | ~14 chunks/s (14,262 chunks in 1,047 s, sharing the CPU with an eval run) | ~12 min |
 
 **Qdrant layout (`src/rcqa/index.py`).**
 - One collection per chunking config (`chunks_w200_o40`). The app reads the alias
-  `rcqa_chunks`, which is swapped atomically when a better config wins (stage 8).
+  `rcqa_chunks`, which is swapped atomically when a better config wins.
 - Cosine distance. Point id = UUIDv5(`chunk_id`), so reloads are idempotent.
 - Payload indexes: `resident_id` (integer), `document_type` and `source_id` (keyword).
   The payload carries everything needed to cite: `citation`, `citation_url`, `section`, `page`, `text`.
@@ -161,7 +189,7 @@ A question can therefore never retrieve another resident's chunk, even when that
 is the closest vector. A unit test plants exactly that case, and a live test checks it
 against the real collection.
 
-**Sanity checks on the real index** (`tests/test_search_live.py`; scored evaluation is stage 8):
+**Sanity checks on the real index** (`tests/test_search_live.py`; scored evaluation is in section 6):
 "post-fall assessment" with `regulation` → top hit `O. Reg. 246/22, s. 54 (Falls
 prevention and management)`; resident 204 searches return only resident 204; public
 searches return no resident chunks.
@@ -198,17 +226,79 @@ the Bill of Rights' paragraph numbers until the labels changed. After generation
 **Summarize this resident.** Every section of the record goes to a handover prompt
 (`- point [S#]` bullets), with the same citation checks.
 
-Known weaknesses of the 3B model (stage 8 will measure them): it sometimes refuses when the
-record says "No active allergies recorded", and it sometimes writes citations as sentence
-subjects ("[2] recommends…").
+Known weaknesses of the 3B model are measured in section 6.
 
 ## 6. Evaluation and results
-TODO (stage 8): 50-question eval set, metrics, baseline vs. best table.
+**Eval set** (`data/eval/questions.jsonl`, built by `scripts/build_eval_set.py`): 60 questions.
+- 25 **resident** questions generated from the gold tables (fall risk, medications, conditions,
+  allergies, injuries, encounters), each labelled with the resident's profile section that answers it.
+- 25 **document** questions I wrote from the sources (regulation, Act, RNAO, IPAC, drug labels), each
+  labelled with the source and an evidence regex that must appear in the retrieved chunk.
+- 10 **must-refuse** questions (5 public off-topic, 5 about a resident's record that doesn't say).
 
-| Run | Chunk size | Overlap | top-k | Filters | Hit@k | Unsupported-answer rate |
-|-----|-----------|---------|-------|---------|-------|-------------------------|
-| baseline | – | – | – | – | – | – |
-| best     | – | – | – | – | – | – |
+Labels don't depend on chunking (source + section, or source + evidence text), so every chunk
+size is scored against the same answer key.
+
+**Metrics.**
+- Retrieval: hit@k and MRR over the 50 answerable questions.
+- Answers:
+  - grounded rate: answered, and at least one citation is a gold source;
+  - unsupported-answer %: answered, but no citation is a gold source;
+  - keyword accuracy: the expected fact appears in the answer;
+  - refusal rate on the 10 must-refuse questions.
+
+Every run logs params, metrics and per-question results to the MLflow experiment `rcqa-retrieval-eval`
+on Databricks, and is also saved to `data/eval/results.csv` and `data/eval/runs/`.
+
+**Retrieval grid** (bge-small, k=5; filter = the question's document type):
+
+| Config (words / overlap) | Chunks | Filter | Hit@1 | Hit@5 | MRR |
+|---|---|---|---|---|---|
+| w100_o20 | 14,262 | on | 0.86 | 0.96 | 0.906 |
+| w100_o20 | | off | 0.82 | 0.96 | 0.881 |
+| **w200_o40** | 10,155 | **on** | **0.94** | **1.00** | **0.967** |
+| w200_o40 | | off | 0.90 | 1.00 | 0.947 |
+| w300_o60 | 8,996 | on | 0.88 | 1.00 | 0.937 |
+| w300_o60 | | off | 0.84 | 0.98 | 0.907 |
+| w400_o80 | 8,486 | on | 0.88 | 1.00 | 0.934 |
+| w400_o80 | | off | 0.82 | 1.00 | 0.896 |
+
+200-word chunks rank the right source first most often, and the type filter adds 0.02 to 0.04 MRR
+at every size. Resident questions are 1.00 everywhere because the whole record is retrieved. The
+alias `rcqa_chunks` stays on `chunks_w200_o40`.
+
+**Baseline vs best (answers)** (w200_o40, k=5, qwen2.5:3b, temperature 0):
+
+| Run | Grounded | Resident | Document | Unsupported answers | Keyword acc. | Must-refuse refused | Uncited sentences / answer |
+|---|---|---|---|---|---|---|---|
+| baseline (prompt v1) | 0.86 | 0.80 | 0.92 | 0.0% | 0.80 | 10/10 | 0.58 |
+| **best (prompt v2)** | **0.94 / 0.96** (2 runs) | **1.00** | 0.88 / 0.92 | **0.0%** | 0.86 / 0.88 | **10/10** | 0.29 |
+
+Retrieval was already 100% at k=5, so all 7 baseline misses were generation failures: the 3B model
+answered yes/no questions with only a citation (`[ S1 ]`, `[END] [S1]`), which the guards correctly
+refused. v2 adds one prompt rule ("start a yes/no answer with Yes or No, then say what the source
+shows") and accepts spaces inside citation labels.
+
+**Ablations** (v2, w200_o40):
+
+| Change | Grounded | Unsupported answers | Note |
+|---|---|---|---|
+| k=3 | 0.96 | 2.0% (1 of 49) | |
+| k=5 (chosen) | 0.94 / 0.96 | 0.0% | |
+| k=8 | 0.92 | 0.0% | more sources, more document refusals |
+| k=5, **citation checker off** | 0.92 | **4.2% (2 of 48)** | the checker fixes wrong source numbers |
+
+**Noise.** Running the same v2 config twice gave 0.94 and 0.96 grounded: even at temperature 0, local
+GPU generation varies by about one question. So differences of 2 points are not real, and k=3 vs k=5
+is a tie (k=5 kept for 0 unsupported answers in both runs).
+
+**What still fails (v2):**
+- The model sometimes cites the law's own paragraph number (`[54 (2)]`) instead of `[S1]`; the answer
+  is then refused (`no_citations`). Example: "What does the regulation require after a resident falls?"
+- Injury questions: the answer is grounded but doesn't name the expected injury (2 of 4 keyword misses).
+- One depression-screening answer named PHQ-9 instead of the expected tool: grounded but wrong.
+  Citation checks can't catch this; only keyword/semantic grading does.
+- One PPE-order question is refused even though the source is retrieved.
 
 ## 7. Privacy
 The data is synthetic, but the pipeline is built as if it weren't.
@@ -247,7 +337,7 @@ were footnote markers glued to words (`Learning45`), journal IDs and DOI UUIDs.
 | Check (latest run) | Result |
 |---|---|
 | Leaks in 7 gold tables + 1,000 profile texts | **0** |
-| Leaks in 10,155 chunks | **0** |
+| Leaks in 10,155 chunks (baseline) and 41,899 chunks (all 4 configs, live test) | **0** |
 | Detector kinds the canaries missed (gold, chunks) | 0, 0 |
 
 `pytest` re-runs the scan from a laptop against live gold profiles and every chunk (`tests/test_privacy_live.py`,
@@ -258,35 +348,71 @@ shift event dates (e.g. a random per-resident offset). That was left out so staf
 keep real dates, which is acceptable only because the data is synthetic.
 
 ## 8. How to run it
-TODO (stages 1, 9, 10). Local services so far:
+**Databricks (once).** Create a Free Edition workspace, the `workspace.rcqa` schema and the
+`raw` Volume (`scripts/check_setup.py` checks all three), upload `data/raw` with
+`scripts/upload_to_volume.sh`, then add this repo as a Git folder and deploy the job:
 
+```bash
+DATABRICKS_PROFILE=rcqa bash scripts/deploy_job.sh    # creates or resets the rcqa-pipeline job
+databricks jobs run-now <job_id> -p rcqa               # bronze -> silver -> gold -> chunks -> embeddings
+```
+
+**Locally.**
 ```bash
 docker compose up -d            # Qdrant on http://localhost:6333
 python -m venv .venv && .venv\Scripts\activate
 pip install -r requirements.txt
-python scripts/check_setup.py
-python scripts/load_qdrant.py --config w200_o40     # after 05_embeddings has run in Databricks
+ollama pull qwen2.5:3b          # run it from the Ollama app so it uses the GPU (`ollama ps`)
+python scripts/load_qdrant.py --config w200_o40      # export from 05_embeddings -> Qdrant
+streamlit run app/streamlit_app.py                   # http://localhost:8501
+```
+
+**CLI, evaluation, tests.**
+```bash
 python scripts/search.py "post-fall assessment" --types regulation
-python scripts/search.py "is she on a blood thinner?" --resident 204 --types drug_label
-ollama pull qwen2.5:3b                               # local LLM (Ollama for Windows)
 python scripts/ask.py "what does the regulation say about post-fall assessment?" --types regulation
 python scripts/ask.py --summarize 204
+python scripts/build_eval_set.py                     # rebuilds data/eval/questions.jsonl
+python scripts/build_tuning_collection.py --config w300_o60   # another chunk config -> Qdrant
+python scripts/evaluate.py --config w200_o40 --k 5             # logs to MLflow + data/eval/results.csv
+python scripts/evaluate.py --config w300_o60 --k 3 --retrieval-only
 pytest
 ```
 
+**CI** (`.github/workflows/ci.yml`): every push runs pytest on Python 3.12 with Java 17
+(live tests skip themselves without Qdrant/Databricks). On `main`, if the repo secrets
+`DATABRICKS_HOST`, `DATABRICKS_TOKEN` and `DATABRICKS_GIT_FOLDER_ID` are set, it pulls the
+Databricks Git folder to the new commit and redeploys the job definition.
+
 ## 9. Repo layout
 ```
-databricks/notebooks/   PySpark notebooks (bronze, silver, gold, chunking)
-databricks/jobs/        Job definition for the end-to-end pipeline
-src/rcqa/               Shared Python: de-identification, chunking, retrieval, prompts
+databricks/notebooks/   PySpark notebooks: 01_bronze, 02_silver, 03_gold, 04_chunks, 05_embeddings
+databricks/jobs/        rcqa_pipeline.json: the scheduled 5-task job
+src/rcqa/               Shared Python: DQ, de-identification, privacy scan, chunking, embedding,
+                        Qdrant index, RAG answers, evaluation metrics
 app/                    Streamlit app
+scripts/                Setup checks, upload, Qdrant loading, ask/search CLIs, eval set + runner, job deploy
 data/raw/               Downloaded raw data (git-ignored)
-data/sources/           sources.csv — every source URL used for citations
-eval/                   50-question evaluation set + results
-scripts/                Local helper scripts (setup checks, upload, indexing)
-tests/                  pytest suite (privacy, pipeline, search)
-docs/                   Architecture diagram, demo script
+data/sources/           sources.csv: every source URL used for citations
+data/eval/              questions.jsonl (60 questions), results.csv, runs/*.json (per-question results)
+tests/                  pytest suite (unit + live tests that skip without services)
+docs/                   Demo script, interview prep
+.github/workflows/      CI
 ```
 
 ## 10. Limitations
-TODO: honest list (synthetic data, free-tier limits, not clinical advice).
+- **Synthetic data only.** Synthea residents, not real ones; the de-identification and privacy
+  gate are tested on synthetic identifiers, so they show the design, not a certified process.
+  Event dates are kept (see section 7).
+- **Not clinical advice.** Answers quote public law and guidance; a 3B local model can still
+  misread a source. Every answer shows its sources so staff can check them.
+- **Small eval set.** 60 questions written by me from the sources (25 resident, 25 document,
+  10 must-refuse). Good enough to compare configurations; too small for fine differences
+  (one question = 2–4 points).
+- **Free Edition limits.** Serverless workers have no internet and embedding on workers failed,
+  so embeddings run on the driver (~48 min per config). Serverless can't reach a laptop, so
+  Qdrant is loaded from an exported Parquet file instead of from the job.
+- **One machine.** Qdrant and Ollama run locally; the app is a demo, not a deployed service,
+  and has no login or access control beyond the per-resident filter.
+- **Lexical citation check.** The claim-vs-source check uses word overlap, so it can miss
+  paraphrases and negations.

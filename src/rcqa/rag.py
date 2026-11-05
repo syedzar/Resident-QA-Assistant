@@ -24,6 +24,7 @@ IDK = "I don't know. The available sources don't cover this."
 MIN_SCORE = 0.65          # measured: on-topic top hits >= 0.72, off-topic <= 0.61 (README); tuned in stage 8
 
 # Sources first, rules and question last: small models follow the instructions nearest the answer.
+PROMPT_VERSION = "v2"   # v1 = baseline; v2 adds the yes/no rule + tolerant citation parsing
 PROMPT = """You are a reference assistant for staff in an Ontario long-term care home.
 
 Sources:
@@ -35,6 +36,8 @@ Rules:
   source that supports it, e.g. "... [S2]." Labels look like [S1], [S2]; numbers inside a source's
   text (section or paragraph numbers) are NOT labels.
 - Never number your own sentences or bullets; if you use a list, start items with "-".
+- For a yes/no question, start with "Yes," or "No," and then say what the source shows,
+  e.g. "No, simvastatin is not on the active medication list [S1]."
 - If the sources do not answer the question, reply with exactly: I don't know
 - At most 5 sentences.
 
@@ -51,6 +54,8 @@ class Source:
     resident_id: int | None
     score: float
     text: str
+    source_id: str | None = None
+    section: str | None = None
 
 
 @dataclass
@@ -123,7 +128,8 @@ def retrieve(retriever: Retriever, question: str, resident_id: int | None = None
 
 def to_sources(hits: list[dict]) -> list[Source]:
     return [Source(i, h["citation"], h.get("citation_url"), h["document_type"], h.get("resident_id"),
-                   float(h["score"]), h["text"]) for i, h in enumerate(hits, 1)]
+                   float(h["score"]), h["text"], h.get("source_id"), h.get("section"))
+            for i, h in enumerate(hits, 1)]
 
 
 def build_prompt(question: str, sources: list[Source], resident_id: int | None = None) -> str:
@@ -135,7 +141,7 @@ def build_prompt(question: str, sources: list[Source], resident_id: int | None =
 
 # Sources are labelled [S1], [S2]... so they can't be confused with numbers inside the text
 # (laws and labels are full of "7. Every resident has the right..."). Answers are shown as [1], [2].
-_CITE = re.compile(r"\[S?(\d+(?:\s*,\s*S?\d+)*)\]")
+_CITE = re.compile(r"\[\s*S?\s*(\d+(?:\s*,\s*S?\s*\d+)*)\s*\]")   # also "[ S1 ]"
 _SENTENCE = re.compile(r"(?<=[.!?])\s+(?!\[)|\n+")   # keep "... done. [3]" with its citation
 
 
@@ -211,7 +217,7 @@ def _is_idk(text: str) -> bool:
 
 def answer(question: str, retriever: Retriever, llm: LLM, resident_id: int | None = None,
            document_types: list[str] | None = None, k: int = 5, k_resident: int = 8,
-           min_score: float = MIN_SCORE) -> Answer:
+           min_score: float = MIN_SCORE, verify: bool = True) -> Answer:
     sources = to_sources(retrieve(retriever, question, resident_id, document_types, k, k_resident))
     top = max((s.score for s in sources), default=0.0)
     if top < min_score:
@@ -233,7 +239,7 @@ def answer(question: str, retriever: Retriever, llm: LLM, resident_id: int | Non
     text = tidy(strip_invalid_citations(raw, set(by_n)))
     if len(_CITE.sub("", text).split()) < 3:        # e.g. the model replied just "[2]"
         return Answer(question, IDK, False, "no_content", sources, raw=raw, top_score=top)
-    text, recited = verify_citations(text, sources)
+    text, recited = verify_citations(text, sources) if verify else (text, 0)
     cited = [by_n[n] for n in parse_citations(text)]
     return Answer(question, text.strip(), True, "answered", sources, cited, raw, invalid,
                   uncited_sentences(text), top, recited)

@@ -1,0 +1,99 @@
+{
+  "name": "rcqa-pipeline",
+  "description": "Resident Care Q&A: bronze -> silver -> gold (de-identified, privacy gate) -> chunks (privacy gate) -> embeddings. Every task writes DQ checks to workspace.rcqa.dq_results; any error check fails the run.",
+  "tasks": [
+    {
+      "task_key": "bronze",
+      "notebook_task": {
+        "notebook_path": "/Users/zaryansyed04@gmail.com/Resident-QA-Assistant/databricks/notebooks/01_bronze",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "run_id": "{{job.run_id}}"
+        }
+      },
+      "timeout_seconds": 5400
+    },
+    {
+      "task_key": "silver",
+      "notebook_task": {
+        "notebook_path": "/Users/zaryansyed04@gmail.com/Resident-QA-Assistant/databricks/notebooks/02_silver",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "run_id": "{{job.run_id}}"
+        }
+      },
+      "timeout_seconds": 5400,
+      "depends_on": [
+        {
+          "task_key": "bronze"
+        }
+      ]
+    },
+    {
+      "task_key": "gold",
+      "notebook_task": {
+        "notebook_path": "/Users/zaryansyed04@gmail.com/Resident-QA-Assistant/databricks/notebooks/03_gold",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "run_id": "{{job.run_id}}"
+        }
+      },
+      "timeout_seconds": 5400,
+      "depends_on": [
+        {
+          "task_key": "silver"
+        }
+      ]
+    },
+    {
+      "task_key": "chunks",
+      "notebook_task": {
+        "notebook_path": "/Users/zaryansyed04@gmail.com/Resident-QA-Assistant/databricks/notebooks/04_chunks",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "run_id": "{{job.run_id}}",
+          "chunk_size": "200",
+          "overlap": "40"
+        }
+      },
+      "timeout_seconds": 5400,
+      "depends_on": [
+        {
+          "task_key": "gold"
+        }
+      ]
+    },
+    {
+      "task_key": "embeddings",
+      "notebook_task": {
+        "notebook_path": "/Users/zaryansyed04@gmail.com/Resident-QA-Assistant/databricks/notebooks/05_embeddings",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "run_id": "{{job.run_id}}",
+          "config_id": "w200_o40"
+        }
+      },
+      "timeout_seconds": 5400,
+      "depends_on": [
+        {
+          "task_key": "chunks"
+        }
+      ]
+    }
+  ],
+  "max_concurrent_runs": 1,
+  "timeout_seconds": 10800,
+  "schedule": {
+    "quartz_cron_expression": "0 0 3 ? * SUN",
+    "timezone_id": "America/Toronto",
+    "pause_status": "UNPAUSED"
+  },
+  "email_notifications": {
+    "on_failure": [
+      "zaryansyed04@gmail.com"
+    ]
+  },
+  "tags": {
+    "project": "resident-care-qa"
+  }
+}

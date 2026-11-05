@@ -1,0 +1,279 @@
+{
+ "run_name": "baseline_w200_o40_k5_retrieval",
+ "params": {
+  "config_id": "w200_o40",
+  "chunk_size": 200,
+  "overlap": 40,
+  "k": 5,
+  "filter": true,
+  "embed_model": "BAAI/bge-small-en-v1.5",
+  "llm": "-",
+  "min_score": 0.65,
+  "citation_check": true,
+  "n_questions": 60,
+  "eval_set_sha256": "0edca0191b22",
+  "mode": "retrieval"
+ },
+ "metrics": {
+  "hit_at_1": 0.94,
+  "hit_at_3": 1.0,
+  "hit_at_5": 1.0,
+  "hit_at_10": 1.0,
+  "mrr": 0.9666666666666667,
+  "hit_at_5_resident": 1.0,
+  "hit_at_5_document": 1.0,
+  "retrieval_seconds": 3.0715417861938477
+ },
+ "per_question": [
+  {
+   "id": "res_fall_877",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_fall_608",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_fall_996",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_fall_1023",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_fall_134",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_meds_584",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_meds_186",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_meds_851",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_meds_455",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_meds_624",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_conditions_285",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_conditions_910",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_conditions_519",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_conditions_716",
+   "kind": "resident",
+   "first_relevant_rank": 2
+  },
+  {
+   "id": "res_allergies_723",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_allergies_715",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_allergies_470",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_allergies_154",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_injuries_783",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_injuries_861",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_injuries_150",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_injuries_577",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_encounters_602",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_encounters_833",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "res_encounters_437",
+   "kind": "resident",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "reg_post_fall",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "reg_skin_weekly",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "reg_pain",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "reg_bed_rails",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "reg_weight",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "reg_ipac_lead",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "reg_continence",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "act_privacy",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "act_whistle",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "act_report_director",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "act_restraint",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "rnao_hip_protectors",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "rnao_exercise",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "rnao_med_review",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "rnao_vitamin_d",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "rnao_cam",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "rnao_gds",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "rnao_reposition",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "rnao_braden",
+   "kind": "document",
+   "first_relevant_rank": 2
+  },
+  {
+   "id": "ipac_moments",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "ipac_ppe_order",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "label_warfarin_bleed",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "label_metformin_lactic",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "label_simvastatin_myopathy",
+   "kind": "document",
+   "first_relevant_rank": 1
+  },
+  {
+   "id": "label_lisinopril_angioedema",
+   "kind": "document",
+   "first_relevant_rank": 3
+  }
+ ]
+}

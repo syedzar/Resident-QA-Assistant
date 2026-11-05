@@ -39,8 +39,13 @@ def test_every_gold_profile_is_free_of_identifiers(known):
 
 
 def test_every_chunk_is_free_of_identifiers(known):
-    _, rows = dbsql.query(f"SELECT chunk_id, document_type, resident_id, text FROM {T}.gold_chunks")
-    assert len(rows) > 5000
+    # one config at a time: all configs together exceed the SQL API's 25 MB inline result limit
+    _, cfgs = dbsql.query(f"SELECT DISTINCT config_id FROM {T}.gold_chunks")
+    rows = []
+    for (cfg,) in cfgs:
+        rows += dbsql.query(f"SELECT chunk_id, document_type, resident_id, text FROM {T}.gold_chunks "
+                            f"WHERE config_id = '{cfg}'")[1]
+    assert len(cfgs) >= 1 and len(rows) > 5000
     leaks = [(cid, l) for cid, dtype, rid, text in rows
              for l in scan_chunk(text, dtype, int(rid) if rid else None, known)]
     assert not leaks, f"{len(leaks)} chunk leaks, e.g. {leaks[:3]}"
