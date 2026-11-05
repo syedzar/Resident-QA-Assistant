@@ -26,3 +26,10 @@ def test_label_sections_keeps_text_in_order_and_drops_metadata():
         ("Boxed Warning", "WARNING: BLEEDING RISK Warfarin can cause major bleeding."),
         ("Adverse Reactions", "Bleeding.\nSkin necrosis."),
     ]
+
+
+def test_clean_text_windows_line_endings_are_one_newline():
+    # Databricks reads files as bytes, so \r\n survives; it must not become a blank line
+    # (the law parser relies on a heading being directly above its section number).
+    assert clean_text("Falls prevention\r\n54. (1) The program\r\nhyphen-\r\nated") == \
+        "Falls prevention\n54. (1) The program\nhyphenated"

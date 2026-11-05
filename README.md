@@ -72,6 +72,7 @@ All tables live in Unity Catalog under `workspace.rcqa`, stored as Delta.
 | Bronze | `01_bronze` | `bronze_<table>`, `bronze_documents`, `bronze_drug_labels`, `bronze_sources` | Raw as-is, every CSV column a string, plus `_source_file` and `_ingested_at` lineage |
 | Silver | `02_silver` | `silver_<table>`, `silver_document_pages`, `silver_drug_label_sections` | snake_case, blanks → NULL, typed dates/numbers, exact duplicates removed; PDFs per page, labels per section |
 | Gold | `03_gold` | `gold_residents`, `gold_conditions`, `gold_medications`, `gold_encounters`, `gold_allergies`, `gold_fall_risk`, `gold_resident_profiles` | Living residents only, de-identified (see Privacy); one profile row per resident with sorted arrays + rendered `profile_text` |
+| Chunks | `04_chunks` | `gold_chunks` (partitioned by `config_id`) | Every source split into citable units, then into word windows; privacy-scanned before anything is embedded |
 
 **Data quality.** Every layer writes to `dq_results` (one row per check per run):
 row counts, null counts on required fields, duplicate keys, exact duplicate rows,
@@ -80,7 +81,45 @@ that doesn't exist). `error` checks stop the job; `warn` checks are recorded onl
 The measuring (`profile`, Spark) and judging (`evaluate`, plain Python) halves are
 split so the rules are unit-tested without a cluster.
 
-TODO (stages 5, 9): chunking, job schedule.
+**Chunking (`src/rcqa/chunking.py`).** Split on the document's own structure first,
+then pack each unit into windows of at most `chunk_size` words with `overlap` words carried over:
+
+| Source | Unit | Citation stored on the chunk |
+|---|---|---|
+| Act + regulation (e-Laws) | numbered section | `O. Reg. 246/22, s. 54 (Falls prevention and management)` |
+| RNAO / PHO PDFs | page (running headers removed, section tab kept, near-empty pages dropped) | `Preventing Falls… (4th ed.), PDF p. 37 (Recommendations)` |
+| Drug labels (openFDA) | label section | `Drug label: warfarin sodium > Boxed Warning` |
+| Resident profiles | profile section (`## Active medications`…) | `Resident 204 > Active medications (as of 2026-11-04)` |
+
+Each chunk carries `source_id`, `document_type`, `section`, `page`, `resident_id`
+(profiles only), `source_date`, `citation`, `citation_url`, the plain `text` shown to
+staff, and an `embed_text` with a context header (e.g. `O. Reg. 246/22, s. 54: Falls
+prevention and management`) so a window from the middle of a section still says what
+it is about. `chunk_size` / `overlap` are job parameters; each configuration is its own
+`config_id` slice (`w200_o40`), written with Delta `replaceWhere`, so stage 8 can compare
+configurations without overwriting each other.
+
+| Baseline `w200_o40` (latest run) | Chunks | Sources | Avg words |
+|---|---|---|---|
+| Resident profiles | 6,000 | 1,000 residents | 44.0 |
+| Drug labels | 1,535 | 25 | 172.4 |
+| Guidelines (RNAO) | 1,001 | 3 | 161.1 |
+| Regulation (O. Reg. 246/22) | 791 | 1 | 141.7 |
+| IPAC guidance (PHO) | 443 | 1 | 163.4 |
+| Act (FLTCA 2021) | 385 | 1 | 139.2 |
+| **Total** | **10,155** | 31 + 1,000 | |
+
+Chunk DQ (all `error`): unique `chunk_id`, required fields not null, no chunk over
+`chunk_size`, every source and all 1,000 residents have chunks, `resident_id` set if and
+only if the chunk is a profile, every document chunk has a URL to cite.
+
+Bugs this caught on the first Databricks run: the Act produced **0** chunks because
+Windows `
+` line endings became blank lines and broke heading detection (fixed in
+`clean_text`, regression test added), and 17 pages that were just a page number and a
+tab label were turned into useless chunks (now dropped).
+
+TODO (stage 9): job schedule.
 
 ## 5. Retrieval + generation (Qdrant RAG)
 TODO (stages 6–7): embedding model, collection schema, filters, prompt.
@@ -116,15 +155,24 @@ Ids are assigned in salted-hash order, so the number reveals nothing about the p
 (~298k rows, serialised to JSON) plus every rendered profile, using two independent nets:
 format patterns (SSN, UUID, licence, passport, phone, Synthea-style names) and known
 values from silver (every name, ID and address, plus each resident's *own* birth date).
-A **canary** scans 20 deliberately leaky rows each run and must find leaks, which proves
-the gate can still fail.
+A **canary** sends 20 rows of real identifiers through the same serialise-and-scan path
+each run, and **every detector kind** (known value, Synthea name, SSN, address, own birth
+date) must fire. Just "found some leaks" isn't enough, because one broken detector
+could hide behind the others.
+
+**Every chunk is scanned again** in `04_chunks` before embedding, with its own canary
+pushed through `chunk_profile()`. Resident chunks use every detector. Public-document
+chunks (laws, guidelines, labels) count only known patient values (names, IDs,
+addresses); format patterns there are noise. The first run flagged 13 "leaks", and all
+were footnote markers glued to words (`Learning45`), journal IDs and DOI UUIDs.
 
 | Check (latest run) | Result |
 |---|---|
 | Leaks in 7 gold tables + 1,000 profile texts | **0** |
-| Canary leaks detected (must be > 0) | 160 |
+| Leaks in 10,155 chunks | **0** |
+| Detector kinds the canaries missed (gold, chunks) | 0, 0 |
 
-`pytest` re-runs the scan from a laptop against live gold (`tests/test_privacy_live.py`,
+`pytest` re-runs the scan from a laptop against live gold profiles and every chunk (`tests/test_privacy_live.py`,
 skipped in CI where there are no credentials) and unit-tests every identifier type.
 
 **Known limitation.** Real-world Safe Harbor de-identification would also generalise or

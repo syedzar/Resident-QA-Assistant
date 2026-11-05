@@ -53,6 +53,27 @@ class KnownIdentifiers:
         return known
 
 
+# Every kind the canary must trigger. If any is missing, that detector is broken.
+CANARY_KINDS = frozenset({"known_identifier", "synthea_name", "ssn", "address", "birthdate"})
+# Public documents (laws, guidelines, labels) come from public URLs, not from patient data, and
+# their format matches are noise: footnote markers glued to words ("Learning45"), journal IDs
+# ("S01959417"), DOI UUIDs, phone numbers. A real mix-up of patient data into a document chunk
+# would carry that patient's actual values, so only known-value matches count there.
+PUBLIC_DOC_KINDS = frozenset({"known_identifier", "address"})
+
+
+def canary_missing(found_kinds) -> set[str]:
+    """Detector kinds the canary did NOT trigger (empty set = every detector works)."""
+    return set(CANARY_KINDS) - set(found_kinds)
+
+
+def scan_chunk(text: str, document_type: str, resident_id: int | None, known: KnownIdentifiers) -> list[Leak]:
+    leaks = find_leaks(text, known, resident_id=resident_id)
+    if document_type != "resident_profile":
+        leaks = [l for l in leaks if l.kind in PUBLIC_DOC_KINDS]
+    return leaks
+
+
 def _date_forms(d: date) -> list[str]:
     return [d.isoformat(), d.strftime("%m/%d/%Y"), f"{d:%B} {d.day}, {d.year}", f"{d.day} {d:%B} {d.year}"]
 

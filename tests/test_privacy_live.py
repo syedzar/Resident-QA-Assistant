@@ -3,14 +3,14 @@
 Runs only when the Databricks CLI is logged in (your laptop). In CI there are no
 credentials, so it is skipped; the same scan also runs inside the gold notebook,
 where any leak fails the scheduled job.
-Stage 5 extends this to every chunk before it is embedded.
+It also scans every chunk in gold_chunks (what stage 6 embeds), for every chunking config.
 """
 from datetime import date
 
 import pytest
 
 from rcqa import dbsql
-from rcqa.privacy import KnownIdentifiers, find_leaks
+from rcqa.privacy import KnownIdentifiers, find_leaks, scan_chunk
 
 pytestmark = pytest.mark.skipif(not dbsql.available(), reason="Databricks CLI not logged in")
 
@@ -36,6 +36,14 @@ def test_every_gold_profile_is_free_of_identifiers(known):
     leaks = {int(rid): find_leaks(text, known, resident_id=int(rid)) for rid, text in rows}
     leaks = {rid: l for rid, l in leaks.items() if l}
     assert not leaks, f"{len(leaks)} profiles leak identifiers, e.g. {list(leaks.items())[:3]}"
+
+
+def test_every_chunk_is_free_of_identifiers(known):
+    _, rows = dbsql.query(f"SELECT chunk_id, document_type, resident_id, text FROM {T}.gold_chunks")
+    assert len(rows) > 5000
+    leaks = [(cid, l) for cid, dtype, rid, text in rows
+             for l in scan_chunk(text, dtype, int(rid) if rid else None, known)]
+    assert not leaks, f"{len(leaks)} chunk leaks, e.g. {leaks[:3]}"
 
 
 def test_gold_tables_have_no_identifier_columns():

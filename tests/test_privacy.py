@@ -55,3 +55,30 @@ def test_other_residents_birthdate_is_not_flagged():
     known = KnownIdentifiers(birthdates={204: date(1960, 3, 1), 305: date(2026, 3, 1)})
     assert find_leaks(CLEAN_PROFILE, known, resident_id=204) == []
     assert find_leaks(CLEAN_PROFILE, known, resident_id=305)  # same text, but it IS 305's birth date
+
+
+def test_canary_reports_missing_detectors():
+    from rcqa.privacy import canary_missing
+    found = {l.kind for l in find_leaks("Tennille443 999-21-9587 911 Hauck Key Suite 34 1960-03-01", KNOWN, 204)}
+    assert canary_missing(found) == set()
+    assert canary_missing(found - {"address"}) == {"address"}
+
+
+def test_public_documents_may_contain_phone_numbers_but_not_patients():
+    from rcqa.privacy import scan_chunk
+    doc = ("Call RNAO at 416-599-1925 for the falls guideline. Learning45 Settings176 "
+           "J Hosp Infect S01959417 doi 5fa19e13-82fe-4601-bf83-d8e84e1cef8a")   # real false positives seen in PDFs
+    assert scan_chunk(doc, "guideline", None, KNOWN) == []
+    assert scan_chunk(doc + " Tennille443", "guideline", None, KNOWN)            # a patient name in a doc chunk
+    assert scan_chunk("phone 416-599-1925", "resident_profile", 204, KNOWN)      # but not in resident chunks
+
+
+def test_privacy_scan_of_chunked_profile_catches_planted_identifiers():
+    """Same path as production: render-like text -> chunk_profile -> scan_chunk."""
+    from rcqa.chunking import ChunkConfig, chunk_profile
+    from rcqa.privacy import canary_missing, scan_chunk
+    text = ("# Resident 204\n\n## Allergies\n- Peanut\n\n## Notes\n"
+            "Tennille443 Kiehn525 SSN 999-21-9587 lives at 911 Hauck Key Suite 34, born 1960-03-01\n")
+    found = {l.kind for c in chunk_profile(204, text, "2026-11-04", ChunkConfig(200, 40))
+             for l in scan_chunk(c.text, c.document_type, c.resident_id, KNOWN)}
+    assert canary_missing(found) == set()

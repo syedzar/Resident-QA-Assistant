@@ -19,9 +19,9 @@ _SKIP_KEYS = {"openfda", "set_id", "id", "effective_time", "version", "spl_produ
 
 def clean_text(text: str) -> str:
     """Normalise whitespace and common PDF artefacts without changing wording."""
+    text = text.replace("\r\n", "\n").replace("\r", "\n")   # Windows line endings = ONE newline
     text = text.replace("­", "")                 # soft hyphens
     text = re.sub(r"-\n(?=[a-z])", "", text)          # words hyphenated across lines
-    text = text.replace("\r", "\n")
     text = re.sub(r"[ \t ]+", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()

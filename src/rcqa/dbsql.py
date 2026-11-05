@@ -30,7 +30,7 @@ def available() -> bool:
 
 def _dbx(*args: str) -> dict:
     out = subprocess.run([_dbx_path(), *args, "-p", PROFILE, "-o", "json"],
-                         capture_output=True, text=True, check=True)
+                         capture_output=True, text=True, encoding="utf-8", check=True)  # not cp1252
     return json.loads(out.stdout)
 
 

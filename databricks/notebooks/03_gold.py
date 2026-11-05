@@ -105,13 +105,16 @@ results.append(dq.CheckResult("gold", "gold_resident_profiles", "privacy_leaks_t
                               len(text_leaks), 0, not text_leaks, "error"))
 leak_samples += [("profile_text", *t) for t in text_leaks[:5]]
 
-# Canary: prove the gate can fail. Scan 20 rows of real identifiers from silver; it MUST find leaks.
-# If a refactor ever breaks the scanner so it finds nothing, "0 leaks" above would be meaningless.
-canary = (silver("patients").join(keymap.withColumnRenamed("patient", "id"), "id").limit(20)
-          .select("resident_id", F.to_json(F.struct("first", "last", "ssn", "address", "birthdate")).alias("text")))
-n_canary = privacy_spark.scan(spark, canary, known, own_addresses).count()
-results.append(dq.CheckResult("gold", "privacy_gate", "canary_leaks_detected", "*", n_canary, 1,
-                              n_canary >= 1, "error"))
+# Canary: prove the gate can fail. 20 rows of real identifiers from silver go through the SAME
+# row_text() -> scan() path as the gold tables, and EVERY detector kind must fire at least once.
+# If a refactor breaks any detector (or row_text), "0 leaks" above would be meaningless.
+canary_rows = (silver("patients").join(keymap.withColumnRenamed("patient", "id"), "id").limit(20)
+               .select("resident_id", "first", "last", "ssn", "address", "birthdate"))
+canary_kinds = {r.kind for r in privacy_spark.scan(spark, privacy_spark.row_text(canary_rows), known, own_addresses)
+                .select("kind").distinct().collect()}
+missing = privacy.canary_missing(canary_kinds)
+results.append(dq.CheckResult("gold", "privacy_gate", "canary_detectors_missing", ",".join(sorted(missing)) or "-",
+                              len(missing), 0, not missing, "error"))
 
 for r in results:
     print(f"{r.table:<24} {r.check:<22} value={r.value}")
