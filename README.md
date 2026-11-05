@@ -73,6 +73,7 @@ All tables live in Unity Catalog under `workspace.rcqa`, stored as Delta.
 | Silver | `02_silver` | `silver_<table>`, `silver_document_pages`, `silver_drug_label_sections` | snake_case, blanks → NULL, typed dates/numbers, exact duplicates removed; PDFs per page, labels per section |
 | Gold | `03_gold` | `gold_residents`, `gold_conditions`, `gold_medications`, `gold_encounters`, `gold_allergies`, `gold_fall_risk`, `gold_resident_profiles` | Living residents only, de-identified (see Privacy); one profile row per resident with sorted arrays + rendered `profile_text` |
 | Chunks | `04_chunks` | `gold_chunks` (partitioned by `config_id`) | Every source split into citable units, then into word windows; privacy-scanned before anything is embedded |
+| Embeddings | `05_embeddings` | `gold_chunk_embeddings` + Parquet export in the Volume | BGE-small vectors (384-d), checked: one per chunk, right dimension, unit length |
 
 **Data quality.** Every layer writes to `dq_results` (one row per check per run):
 row counts, null counts on required fields, duplicate keys, exact duplicate rows,
@@ -114,7 +115,8 @@ Chunk DQ (all `error`): unique `chunk_id`, required fields not null, no chunk ov
 only if the chunk is a profile, every document chunk has a URL to cite.
 
 Bugs this caught on the first Databricks run: the Act produced **0** chunks because
-Windows `
+Windows `
+
 ` line endings became blank lines and broke heading detection (fixed in
 `clean_text`, regression test added), and 17 pages that were just a page number and a
 tab label were turned into useless chunks (now dropped).
@@ -122,7 +124,49 @@ tab label were turned into useless chunks (now dropped).
 TODO (stage 9): job schedule.
 
 ## 5. Retrieval + generation (Qdrant RAG)
-TODO (stages 6–7): embedding model, collection schema, filters, prompt.
+**Embeddings.** `BAAI/bge-small-en-v1.5` (free, 384-d) through fastembed (ONNX, no PyTorch),
+so Databricks and the app run the *same* model files. Documents are embedded from
+`embed_text` (chunk + context header); queries get BGE's search instruction prefix.
+
+**Databricks → Qdrant.** Free Edition serverless can't reach a Qdrant on a laptop, so
+Delta (`gold_chunk_embeddings`) is the source of truth, and `05_embeddings` exports one
+Parquet file to the Volume. `scripts/load_qdrant.py` downloads it and upserts into
+whatever `QDRANT_URL` points at: local Docker now, and Qdrant Cloud the same way.
+
+**Free Edition limitation, measured.** The first design embedded with `mapInPandas` on
+workers. That failed: workers have no internet (the model can't be downloaded), and with
+the model cached in the Volume, the UDF tasks died with an opaque `INTERNAL_ERROR` after
+~20 min. The workaround embeds on the driver in batches:
+
+| Where | Throughput (BGE-small, CPU) | 10,155 chunks |
+|---|---|---|
+| Databricks Free Edition serverless driver | ~3.5 chunks/s | 2,905 s (48 min) |
+| Laptop (same model, fastembed) | ~163 chunks/s | ~1 min |
+
+**Qdrant layout (`src/rcqa/index.py`).**
+- One collection per chunking config (`chunks_w200_o40`). The app reads the alias
+  `rcqa_chunks`, which is swapped atomically when a better config wins (stage 8).
+- Cosine distance. Point id = UUIDv5(`chunk_id`), so reloads are idempotent.
+- Payload indexes: `resident_id` (integer), `document_type` and `source_id` (keyword).
+  The payload carries everything needed to cite: `citation`, `citation_url`, `section`, `page`, `text`.
+
+**Filtered search: privacy by construction.**
+
+| Question about… | Filter |
+|---|---|
+| A resident (`resident_id=204`) | `resident_id = 204`, optionally OR the public types asked for (e.g. `drug_label`) |
+| Rules or guidelines (no resident) | `document_type IN (public types)`, never resident profiles |
+
+A question can therefore never retrieve another resident's chunk, even when that chunk
+is the closest vector. A unit test plants exactly that case, and a live test checks it
+against the real collection.
+
+**Sanity checks on the real index** (`tests/test_search_live.py`; scored evaluation is stage 8):
+"post-fall assessment" with `regulation` → top hit `O. Reg. 246/22, s. 54 (Falls
+prevention and management)`; resident 204 searches return only resident 204; public
+searches return no resident chunks.
+
+TODO (stage 7): prompt, citations, "I don't know" fallback.
 
 ## 6. Evaluation and results
 TODO (stage 8): 50-question eval set, metrics, baseline vs. best table.
@@ -187,6 +231,9 @@ docker compose up -d            # Qdrant on http://localhost:6333
 python -m venv .venv && .venv\Scripts\activate
 pip install -r requirements.txt
 python scripts/check_setup.py
+python scripts/load_qdrant.py --config w200_o40     # after 05_embeddings has run in Databricks
+python scripts/search.py "post-fall assessment" --types regulation
+python scripts/search.py "is she on a blood thinner?" --resident 204 --types drug_label
 pytest
 ```
 

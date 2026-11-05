@@ -10,6 +10,7 @@ __pycache__/
 # data (raw downloads stay local / in Databricks Volumes, never in git)
 data/raw/*
 !data/raw/.gitkeep
+data/exports/
 *.parquet
 
 # local services
