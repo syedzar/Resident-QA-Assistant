@@ -166,7 +166,41 @@ against the real collection.
 prevention and management)`; resident 204 searches return only resident 204; public
 searches return no resident chunks.
 
-TODO (stage 7): prompt, citations, "I don't know" fallback.
+**Answers (`src/rcqa/rag.py`).** LLM: `qwen2.5:3b` running locally through Ollama on the
+GPU (RTX 3060, about 3–5 s per answer), at temperature 0 so evaluation runs are repeatable.
+It's local, so resident chunks never leave the machine. Set `OLLAMA_MODEL` to swap models.
+
+| Question type | What is retrieved |
+|---|---|
+| No resident | top-5 public chunks (optionally limited to `document_types`) |
+| Resident `204` | that resident's **whole record** (~6 chunks; ranking only 6 can only drop a section) |
+| Resident + references | the whole record, plus top-5 chunks of the requested public types (e.g. `drug_label`) |
+
+**"I don't know" is enforced in code, not just requested in the prompt:**
+
+| Guard | Refuses when | Reason code |
+|---|---|---|
+| Retrieval gate | best chunk scores < 0.65 (measured: on-topic ≥ 0.72, off-topic ≤ 0.61); the LLM isn't called | `low_retrieval_score` |
+| Prompt | the model replies "I don't know" | `llm_idk` |
+| Citation check | no valid `[S#]` citation in the answer | `no_citations` |
+| Content check | the answer is only citations (e.g. `[2]`) | `no_content` |
+| Error | Ollama is down or times out: refuse, never guess | `llm_error` |
+
+**Citations are checked, not trusted.** Sources are labelled `[S1]`, `[S2]`… because laws and
+labels are full of their own numbers ("7. Every resident has the right…"). The 3B model cited
+the Bill of Rights' paragraph numbers until the labels changed. After generation:
+- citations to sources that weren't given are dropped and counted;
+- each claim's words are compared with the source it cites. If another source clearly matches
+  better, the citation is corrected and counted (`recited`). In testing, the model quoted s. 54
+  word for word but labelled it s. 298;
+- sentences without any citation are counted (`uncited_sentences`, a stage-8 metric).
+
+**Summarize this resident.** Every section of the record goes to a handover prompt
+(`- point [S#]` bullets), with the same citation checks.
+
+Known weaknesses of the 3B model (stage 8 will measure them): it sometimes refuses when the
+record says "No active allergies recorded", and it sometimes writes citations as sentence
+subjects ("[2] recommends…").
 
 ## 6. Evaluation and results
 TODO (stage 8): 50-question eval set, metrics, baseline vs. best table.
@@ -234,6 +268,9 @@ python scripts/check_setup.py
 python scripts/load_qdrant.py --config w200_o40     # after 05_embeddings has run in Databricks
 python scripts/search.py "post-fall assessment" --types regulation
 python scripts/search.py "is she on a blood thinner?" --resident 204 --types drug_label
+ollama pull qwen2.5:3b                               # local LLM (Ollama for Windows)
+python scripts/ask.py "what does the regulation say about post-fall assessment?" --types regulation
+python scripts/ask.py --summarize 204
 pytest
 ```
 

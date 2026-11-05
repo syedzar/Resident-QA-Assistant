@@ -17,6 +17,8 @@ from qdrant_client import QdrantClient, models
 ALIAS = "rcqa_chunks"
 PAYLOAD_FIELDS = ["chunk_id", "source_id", "document_type", "title", "section", "page", "resident_id",
                   "source_date", "citation", "citation_url", "text", "config_id"]
+PROFILE_SECTIONS = ["Fall risk and falls", "Injuries", "Active conditions", "Active medications", "Allergies",
+                    "Recent encounters"]   # order rendered by rcqa.profile_text
 PUBLIC_TYPES = ["guideline", "ipac_guidance", "legislation", "regulation", "drug_label"]
 _NS = uuid.UUID("5b1f6c1e-3c0a-4c55-9c39-2d7b0e0b9a11")
 
@@ -83,6 +85,14 @@ def build_filter(resident_id: int | None = None, document_types: list[str] | Non
     own = models.Filter(must=[models.FieldCondition(key="resident_id", match=models.MatchValue(value=int(resident_id)))])
     should = [own] + ([public] if document_types else [])
     return models.Filter(should=should)
+
+
+def resident_chunks(client: QdrantClient, collection: str, resident_id: int) -> list[dict]:
+    """Every chunk of one resident's record, in profile order (for "Summarize this resident")."""
+    f = models.Filter(must=[models.FieldCondition(key="resident_id", match=models.MatchValue(value=int(resident_id)))])
+    points, _ = client.scroll(collection, scroll_filter=f, limit=100, with_payload=True)
+    order = {s: i for i, s in enumerate(PROFILE_SECTIONS)}
+    return sorted((p.payload for p in points), key=lambda p: (order.get(p["section"], 99), p["chunk_id"]))
 
 
 def search(client: QdrantClient, collection: str, vector: list[float], k: int = 5,
